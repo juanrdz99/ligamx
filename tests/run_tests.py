@@ -158,14 +158,16 @@ def generate_report(test_result):
         report += "Fallos:\n" + "=" * 10 + "\n"
         for i, (test, traceback) in enumerate(test_result.failures, 1):
             report += f"  {i}. {test}\n"
-            report += f"     {traceback.split('\\n')[0]}\n\n"
+            first_line = traceback.split('\n')[0]
+            report += f"     {first_line}\n\n"
     
     # Detalles de errores
     if errors > 0:
         report += "Errores:\n" + "=" * 10 + "\n"
         for i, (test, traceback) in enumerate(test_result.errors, 1):
             report += f"  {i}. {test}\n"
-            report += f"     {traceback.split('\\n')[0]}\n\n"
+            first_line = traceback.split('\n')[0]
+            report += f"     {first_line}\n\n"
     
     return report
 
