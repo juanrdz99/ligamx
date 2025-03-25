@@ -4,6 +4,7 @@ import time
 from flask import Flask, render_template, jsonify
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
+from api_stats_manager import ApiStatsManager
 
 # Cargar variables de entorno desde el archivo .env
 load_dotenv()
@@ -21,84 +22,12 @@ FIXTURES_URL = f'https://livescore-api.com/api-client/fixtures/matches.json?comp
 HISTORY_URL = f'https://livescore-api.com/api-client/scores/history.json?competition_id=45&page=93&key={LIVESCORE_API_KEY}&secret={LIVESCORE_API_SECRET}'
 TOPSCORERS_URL = f'https://livescore-api.com/api-client/competitions/topscorers.json?competition_id=45&key={LIVESCORE_API_KEY}&secret={LIVESCORE_API_SECRET}'
 
-# Variables globales para seguimiento de estadísticas de API
-api_calls_count = 0
-api_errors_count = 0
-api_response_times = []
-api_start_time = time.time()
-
-# Número de intervalos de tiempo para el historial (últimas 48 horas)
-HISTORY_INTERVALS = 48
-
-# Historial de llamadas para tendencias (últimas horas)
-api_history = {
-    'calls': [0] * HISTORY_INTERVALS,
-    'success_rate': [100] * HISTORY_INTERVALS,
-    'response_time': [0] * HISTORY_INTERVALS,
-    'errors': [0] * HISTORY_INTERVALS
-}
-
-# Horas para el historial (últimas horas)
-api_hours = []
-
-# Inicializar horas para los últimos intervalos
-def initialize_hours():
-    global api_hours
-    now = datetime.now()
-    api_hours = [(now - timedelta(hours=i)).strftime('%H:%M') for i in range(HISTORY_INTERVALS-1, -1, -1)]
-
-# Inicializar horas
-initialize_hours()
+# Inicializar el administrador de estadísticas de API
+api_stats = ApiStatsManager(history_intervals=48)
 
 # Función para registrar estadísticas de API
 def track_api_call(success, response_time):
-    global api_calls_count, api_errors_count, api_response_times
-    api_calls_count += 1
-    api_response_times.append(response_time)
-    if not success:
-        api_errors_count += 1
-    
-    # Obtener la hora actual para actualizar el índice correcto
-    current_hour = datetime.now().strftime('%H:%M')
-    
-    # Buscar la hora actual en el array de horas o usar la más cercana
-    if current_hour in api_hours:
-        hour_index = api_hours.index(current_hour)
-    else:
-        # Si la hora exacta no está, encontrar la hora más cercana
-        # Por defecto, usar la última hora
-        hour_index = HISTORY_INTERVALS - 1
-        
-        # Convertir current_hour a minutos desde medianoche para comparación
-        current_hour_parts = current_hour.split(':')
-        current_minutes = int(current_hour_parts[0]) * 60 + int(current_hour_parts[1])
-        
-        # Encontrar la hora más cercana
-        min_diff = float('inf')
-        for i, hour in enumerate(api_hours):
-            hour_parts = hour.split(':')
-            hour_minutes = int(hour_parts[0]) * 60 + int(hour_parts[1])
-            diff = abs(hour_minutes - current_minutes)
-            if diff < min_diff:
-                min_diff = diff
-                hour_index = i
-    
-    # Actualizar historial para la hora actual
-    api_history['calls'][hour_index] += 1
-    
-    if not success:
-        api_history['errors'][hour_index] += 1
-    
-    # Actualizar tasa de éxito
-    total_calls = api_history['calls'][hour_index]
-    total_errors = api_history['errors'][hour_index]
-    success_rate = 100
-    if total_calls > 0:
-        success_rate = round(((total_calls - total_errors) / total_calls) * 100)
-    api_history['success_rate'][hour_index] = success_rate
-    
-    # Actualizar tiempo de respuesta promedio
-    api_history['response_time'][hour_index] = response_time
+    api_stats.track_api_call(success, response_time)
 
 @app.route('/')
 def index():
@@ -249,19 +178,11 @@ def get_dashboard():
                     # Estimar el total: (páginas completas * partidos por página) + partidos de la última página
                     total_matches = ((total_pages - 1) * matches_per_page) + last_page_matches
         
-        # Datos para el dashboard
-        dashboard_data = {
-            'api_stats': {
-                'calls': api_calls_count,
-                'success_rate': 100 - (api_errors_count / api_calls_count) * 100 if api_calls_count > 0 else 0,
-                'response_time': sum(api_response_times) / len(api_response_times) if api_response_times else 0,
-                'errors': api_errors_count,
-                'uptime': int(time.time() - api_start_time)
-            },
-            'api_trend': api_history,
-            'hours': api_hours,
-            'total_matches': total_matches
-        }
+        # Obtener datos del dashboard desde el administrador de estadísticas
+        dashboard_data = api_stats.get_dashboard_data()
+        
+        # Agregar el total de partidos
+        dashboard_data['total_matches'] = total_matches
         
         # Registrar las llamadas a la API
         track_api_call(True, results_response.elapsed.total_seconds())
