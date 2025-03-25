@@ -1,0 +1,31 @@
+server {
+    listen 80;
+    server_name ligamx.com www.ligamx.com;
+
+    location / {
+        proxy_pass http://localhost:5000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location /static {
+        alias /var/www/ligamxweb/static;
+        expires 30d;
+    }
+
+    # Configuración para Let's Encrypt
+    location ~ /.well-known {
+        allow all;
+        root /var/www/html;
+    }
+
+    # Redirección de errores
+    error_page 404 /404.html;
+    error_page 500 502 503 504 /50x.html;
+    
+    # Logs
+    access_log /var/log/nginx/ligamxweb_access.log;
+    error_log /var/log/nginx/ligamxweb_error.log;
+}
