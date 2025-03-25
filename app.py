@@ -3,12 +3,16 @@ import requests
 import time
 from flask import Flask, render_template, jsonify
 from datetime import datetime, timedelta
+from dotenv import load_dotenv
+
+# Cargar variables de entorno desde el archivo .env
+load_dotenv()
 
 app = Flask(__name__)
 
 # LiveScore API credentials
-LIVESCORE_API_KEY = 'ffzVfpbpm1R8Xfgc'
-LIVESCORE_API_SECRET = '0kD5SHLJlkljEcjUrSPGi05E1WNZc3cc'
+LIVESCORE_API_KEY = os.getenv('LIVESCORE_API_KEY')
+LIVESCORE_API_SECRET = os.getenv('LIVESCORE_API_SECRET')
 
 # API endpoints
 STANDINGS_URL = f'https://livescore-api.com/api-client/leagues/table.json?competition_id=45&group_id=3420&key={LIVESCORE_API_KEY}&secret={LIVESCORE_API_SECRET}'
@@ -156,11 +160,8 @@ def get_results():
 @app.route('/api/metrics')
 def get_metrics():
     try:
-        # URL para obtener los máximos goleadores
-        topscorers_url = "https://livescore-api.com/api-client/competitions/topscorers.json?competition_id=45&key=ffzVfpbpm1R8Xfgc&secret=0kD5SHLJlkljEcjUrSPGi05E1WNZc3cc"
-        
         # Obtener datos reales de máximos goleadores
-        topscorers_response = requests.get(topscorers_url)
+        topscorers_response = requests.get(TOPSCORERS_URL)
         topscorers_data = topscorers_response.json()
         
         # Obtener datos de la tabla de posiciones para extraer información de goles

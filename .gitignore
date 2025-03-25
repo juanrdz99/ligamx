@@ -1,0 +1,54 @@
+# Archivos de entorno y configuraciu00f3n
+.env
+.env.*
+!.env.example
+
+# Archivos de cachu00e9 de Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv/
+
+# Archivos de distribuciu00f3n / empaquetado
+dist/
+build/
+*.egg-info/
+
+# Archivos de pruebas y cobertura
+.coverage
+htmlcov/
+.pytest_cache/
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# Archivos de registro y reportes
+*.log
+logs/
+reports/
+test_report.txt
+
+# Archivos temporales
+*.tmp
+*.bak
+*.swp
+*~
+
+# Archivos especu00edficos del sistema
+.DS_Store
+Thumbs.db
+
+# Archivos de IDEs y editores
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Archivos especu00edficos de la aplicaciu00f3n
+instance/
