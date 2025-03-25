@@ -25,9 +25,12 @@ jobs:
         pip install python-dotenv flask requests
         
     - name: Create .env file
+      env:
+        LIVESCORE_API_KEY: ${{ secrets.LIVESCORE_API_KEY }}
+        LIVESCORE_API_SECRET: ${{ secrets.LIVESCORE_API_SECRET }}
       run: |
-        echo "LIVESCORE_API_KEY=${{ secrets.LIVESCORE_API_KEY }}" > .env
-        echo "LIVESCORE_API_SECRET=${{ secrets.LIVESCORE_API_SECRET }}" >> .env
+        echo "LIVESCORE_API_KEY=$LIVESCORE_API_KEY" > .env
+        echo "LIVESCORE_API_SECRET=$LIVESCORE_API_SECRET" >> .env
         echo "FLASK_ENV=testing" >> .env
         echo "FLASK_DEBUG=False" >> .env
         
