@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Liga MX Stats</title>
+    <!-- Favicons -->
+    <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/favicon.svg') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/logo.png') }}">
+    <!-- Meta tags -->
     <meta name="description" content="Estadísticas en tiempo real de la Liga MX. Tabla de posiciones, partidos en vivo, calendario, historial y métricas avanzadas del fútbol mexicano. Recibe notificaciones por Telegram.">
     <meta name="keywords" content="Liga MX, fútbol mexicano, estadísticas, tabla de posiciones, partidos en vivo, métricas">
     <!-- Open Graph / Facebook -->
@@ -18,9 +23,11 @@
     <meta property="twitter:title" content="Liga MX Stats">
     <meta property="twitter:description" content="Estadísticas en tiempo real de la Liga MX. Tabla de posiciones, partidos en vivo, calendario, historial y métricas avanzadas del fútbol mexicano.">
     <meta property="twitter:image" content="{{ url_for('static', filename='img/logo.png') }}">
+    <!-- Stylesheets -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <!-- Speed Insights -->
     <script type="module">
         import { injectSpeedInsights } from 'https://unpkg.com/@vercel/speed-insights@1.2.0/dist/web/index.js';
         injectSpeedInsights();
