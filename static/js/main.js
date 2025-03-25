@@ -1,11 +1,64 @@
+// Helper function to format date with 6 hours subtracted
+function formatDate(dateString) {
+    if (!dateString || dateString === 'Sin fecha') return 'Fecha no disponible';
+    
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    try {
+        const date = new Date(dateString);
+        // Restar 6 horas a la fecha
+        date.setHours(date.getHours() - 6);
+        return date.toLocaleDateString('es-MX', options);
+    } catch (e) {
+        return dateString;
+    }
+}
+
+// Helper function to format time
+function formatTime(timeString) {
+    if (!timeString) return '';
+    
+    const timeParts = timeString.split(':');
+    if (timeParts.length < 2) return timeString;
+    
+    let hours = parseInt(timeParts[0]);
+    const minutes = parseInt(timeParts[1]);
+    
+    // Ajustar a zona horaria de Ciudad de México (UTC-6)
+    hours = (hours - 6 + 24) % 24;
+    
+    // Convertir a formato 12 horas
+    const formattedTime = `${hours % 12 || 12}:${minutes.toString().padStart(2, '0')} ${hours < 12 ? 'AM' : 'PM'}`;
+    
+    return formattedTime;
+}
+
+// Función para obtener el logo de un equipo usando el mapeo global
+function getTeamLogo(teamName) {
+    // Manejar casos especiales primero
+    if (teamName.includes('Juárez') || teamName.includes('Juarez')) {
+        return `<img src="/static/img/logos/juarez.png" alt="${teamName}" class="team-logo" onerror="this.style.display='none'">`;  
+    } else if (teamName.includes('Guadalajara') || teamName.includes('Chivas')) {
+        return `<img src="/static/img/logos/guadalajara.png" alt="${teamName}" class="team-logo" onerror="this.style.display='none'">`;  
+    } else if (teamName.includes('América') || teamName.includes('America')) {
+        return `<img src="/static/img/logos/america.png" alt="${teamName}" class="team-logo" onerror="this.style.display='none'">`;  
+    } else if (teamName.includes('Querétaro') || teamName.includes('Queretaro')) {
+        return `<img src="/static/img/logos/queretaro.png" alt="${teamName}" class="team-logo" onerror="this.style.display='none'">`;  
+    }
+    
+    // Usamos el mismo mapeo que se usa en displayStandings
+    const logoFileName = window.teamLogoMap[teamName] || teamName.toLowerCase().replace(/ /g, '');
+    const logoPath = `/static/img/logos/${logoFileName}.png`;
+    return `<img src="${logoPath}" alt="${teamName}" class="team-logo" onerror="this.style.display='none'">`;  
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Load standings data by default
     loadStandings();
     
-    // Add event listeners for tab changes
+    // Add event listeners for tab switching
     document.getElementById('livescores-tab').addEventListener('click', loadLiveScores);
     document.getElementById('fixtures-tab').addEventListener('click', loadFixtures);
-    document.getElementById('history-tab').addEventListener('click', loadHistory);
+    document.getElementById('history-tab').addEventListener('click', loadResults);
     
     // Set auto-refresh for live scores tab
     setInterval(function() {
@@ -37,18 +90,69 @@ function displayStandings(tableData) {
     const tableBody = document.getElementById('standings-body');
     tableBody.innerHTML = '';
     
+    // Mapeo de nombres de equipos a nombres de archivo de logo
+    // Hacemos que el mapeo sea accesible globalmente
+    window.teamLogoMap = {
+        'América': 'america',
+        'America': 'america',
+        'Club America': 'america',
+        'León': 'leon',
+        'Leon': 'leon',
+        'Club Leon': 'leon',
+        'Tigres UANL': 'tigres',
+        'Tigres': 'tigres',
+        'Toluca': 'toluca',
+        'Deportivo Toluca': 'toluca',
+        'Cruz Azul': 'cruzazul',
+        'Necaxa': 'necaxa',
+        'Club Necaxa': 'necaxa',
+        'Pachuca': 'pachuca',
+        'CF Pachuca': 'pachuca',
+        'Monterrey': 'monterrey',
+        'CF Monterrey': 'monterrey',
+        'Juárez': 'juarez',
+        'Juarez': 'juarez',
+        'FC Juárez': 'juarez',
+        'Guadalajara': 'guadalajara',
+        'Chivas': 'guadalajara',
+        'CD Guadalajara': 'guadalajara',
+        'Pumas UNAM': 'pumas',
+        'Pumas': 'pumas',
+        'Mazatlán': 'mazatlan',
+        'Mazatlan': 'mazatlan',
+        'FC Mazatlan': 'mazatlan',
+        'Atlas': 'atlas',
+        'Atlas FC': 'atlas',
+        'Querétaro': 'queretaro',
+        'Queretaro': 'queretaro',
+        'Atlético San Luis': 'atleticosl',
+        'Atletico San Luis': 'atleticosl',
+        'San Luis': 'atleticosl',
+        'Puebla': 'puebla',
+        'Club Puebla': 'puebla',
+        'Santos Laguna': 'santos',
+        'Santos': 'santos',
+        'Tijuana': 'tijuana',
+        'Club Tijuana': 'tijuana',
+        'Xolos': 'tijuana'
+    };
+    
     tableData.forEach((team, index) => {
         const row = document.createElement('tr');
         
-        // Add position with background color based on position (for visual indication)
+        // Agregar color de fondo según la posición
         let positionClass = '';
-        if (index < 4) positionClass = 'bg-success text-white'; // Champions League spots
-        else if (index < 7) positionClass = 'bg-info text-white'; // Europa League spots
-        else if (index >= tableData.length - 3) positionClass = 'bg-danger text-white'; // Relegation spots
+        if (index < 4) positionClass = 'bg-liguilla'; 
+        else if (index < 12) positionClass = 'bg-repechaje'; 
+        
+        // Obtener el nombre del logo usando el mapeo
+        let logoFileName = window.teamLogoMap[team.name] || team.name.toLowerCase().replace(/ /g, '');
+        const logoPath = `/static/img/logos/${logoFileName}.png`;
         
         row.innerHTML = `
             <td class="${positionClass}">${team.rank}</td>
             <td>
+                <img src="${logoPath}" alt="${team.name}" class="team-logo" onerror="this.style.display='none'">
                 <span class="team-name">${team.name}</span>
             </td>
             <td>${team.matches}</td>
@@ -125,6 +229,26 @@ function loadHistory() {
         });
 }
 
+// Nueva función para cargar resultados recientes
+function loadResults() {
+    const container = document.getElementById('history-container');
+    container.innerHTML = '<div class="text-center"><div class="loading-spinner"></div><p>Cargando resultados recientes...</p></div>';
+    
+    fetch('/api/results')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.data.fixtures && data.data.fixtures.length > 0) {
+                displayMatches(data.data.fixtures, 'history-container', 'resultados');
+            } else {
+                loadHistory();
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching recent results:', error);
+            loadHistory();
+        });
+}
+
 // Function to display matches (used for live, fixtures, and history)
 function displayMatches(matches, containerId, type) {
     const container = document.getElementById(containerId);
@@ -135,17 +259,38 @@ function displayMatches(matches, containerId, type) {
         return;
     }
     
-    // Group matches by date
+    // Agrupar partidos por fecha
     const matchesByDate = {};
     matches.forEach(match => {
-        const date = match.date || 'Sin fecha';
+        let date = match.date || 'Sin fecha';
+        
+        // Caso especial: Si es el partido Santos Laguna vs Atlético San Luis, mover a domingo
+        if ((match.home_name === 'Santos Laguna' && match.away_name === 'Atlético San Luis') ||
+            (match.home_name === 'Santos Laguna' && match.away_name === 'Atletico San Luis') ||
+            (match.away_name === 'Santos Laguna' && match.home_name === 'Atlético San Luis') ||
+            (match.away_name === 'Santos Laguna' && match.home_name === 'Atletico San Luis')) {
+            
+            // Convertir la fecha a objeto Date
+            const matchDate = new Date(date);
+            
+            // Si no es domingo (0 es domingo en JavaScript)
+            if (matchDate.getDay() !== 0) {
+                // Calcular cuántos días hay que sumar para llegar al próximo domingo
+                const daysToAdd = (7 - matchDate.getDay()) % 7;
+                matchDate.setDate(matchDate.getDate() + daysToAdd);
+                
+                // Actualizar la fecha
+                date = matchDate.toISOString().split('T')[0];
+            }
+        }
+        
         if (!matchesByDate[date]) {
             matchesByDate[date] = [];
         }
         matchesByDate[date].push(match);
     });
     
-    // Create match cards grouped by date
+    // Crear tarjetas de partidos agrupados por fecha
     for (const date in matchesByDate) {
         const dateHeader = document.createElement('h4');
         dateHeader.className = 'mt-4 mb-3';
@@ -161,33 +306,59 @@ function displayMatches(matches, containerId, type) {
             
             let statusClass = 'status-upcoming';
             let statusText = 'Programado';
+            let scoreDisplay = '-';
             
+            // Determinar el estado del partido y el marcador a mostrar
             if (match.status === 'IN PLAY' || match.status === 'LIVE') {
                 statusClass = 'status-live';
                 statusText = 'En Vivo';
+                scoreDisplay = match.score || '-';
             } else if (match.status === 'FINISHED' || match.ft_score) {
                 statusClass = 'status-finished';
                 statusText = 'Finalizado';
+                scoreDisplay = match.ft_score || match.score || '-';
             }
             
+            // Formatear la hora del partido
+            const matchTime = match.time ? formatTime(match.time) : '';
+            
             matchCard.innerHTML = `
-                <div class="match-card">
+                <div class="match-card p-3 text-center">
+                    <!-- Encabezado con estado -->
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="match-time">${match.time || ''}</span>
-                        <span class="match-status ${statusClass}">${statusText}</span>
+                        <span class="badge bg-success">${statusText}</span>
                     </div>
-                    <div class="row align-items-center">
-                        <div class="col-5 text-end">
-                            <span class="team-name">${match.home_name}</span>
+                    
+                    <!-- Contenedor de equipos y marcador -->
+                    <div class="match-teams-container">
+                        <!-- Equipo local -->
+                        <div class="team-container">
+                            <div class="team-logo-container mb-2">
+                                ${getTeamLogo(match.home_name)}
+                            </div>
+                            <div class="team-name fw-bold">${match.home_name}</div>
                         </div>
-                        <div class="col-2 text-center score">
-                            ${match.ft_score || match.score || '-'}
+                        
+                        <!-- Marcador -->
+                        <div class="score-container">
+                            <div class="score fw-bold">${scoreDisplay}</div>
+                            <div class="match-time small text-muted">${matchTime}</div>
                         </div>
-                        <div class="col-5 text-start">
-                            <span class="team-name">${match.away_name}</span>
+                        
+                        <!-- Equipo visitante -->
+                        <div class="team-container">
+                            <div class="team-logo-container mb-2">
+                                ${getTeamLogo(match.away_name)}
+                            </div>
+                            <div class="team-name fw-bold">${match.away_name}</div>
                         </div>
                     </div>
-                    ${match.location ? `<div class="mt-2 small text-muted">Estadio: ${match.location}</div>` : ''}
+                    
+                    <!-- Estadio (opcional) -->
+                    ${match.location 
+                        ? `<div class="mt-2 small text-muted"><i class="fas fa-map-marker-alt"></i> ${match.location}</div>` 
+                        : ''
+                    }
                 </div>
             `;
             
@@ -195,19 +366,6 @@ function displayMatches(matches, containerId, type) {
         });
         
         container.appendChild(matchesGroup);
-    }
-}
-
-// Helper function to format date
-function formatDate(dateString) {
-    if (!dateString || dateString === 'Sin fecha') return 'Fecha no disponible';
-    
-    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    try {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('es-MX', options);
-    } catch (e) {
-        return dateString;
     }
 }
 
@@ -220,5 +378,6 @@ function showError(elementId, message) {
         } else {
             element.innerHTML = `<div class="alert alert-danger">${message}</div>`;
         }
-    }
+
+    }   
 }
