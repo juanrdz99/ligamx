@@ -62,6 +62,7 @@ jobs:
         cp requirements.txt dist/
         cp .env dist/
         cp -r tests dist/
+        cp index.html dist/
         
     - name: Upload artifact
       uses: actions/upload-artifact@v4
