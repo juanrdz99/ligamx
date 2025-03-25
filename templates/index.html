@@ -14,31 +14,63 @@
             <h1 class="liga-mx-title"><span class="text-green">LIGA</span><span class="text-white">MX</span> <span class="text-red">Stats</span></h1>
             <div class="nav-tabs-container">
                 <ul class="nav nav-tabs" id="myTab" role="tablist">
+                    <!-- Telegram Bot Tab -->
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="standings-tab" data-bs-toggle="tab" data-bs-target="#standings" type="button" role="tab" aria-controls="standings" aria-selected="true">Tabla de Posiciones</button>
+                        <button class="nav-link active" id="telegram-tab" data-bs-toggle="tab" data-bs-target="#telegram" type="button" role="tab" aria-controls="telegram" aria-selected="true">
+                            <i class="fab fa-telegram"></i> Telegram Bot
+                        </button>
+                    </li>
+                    <!-- Standings Tab -->
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="standings-tab" data-bs-toggle="tab" data-bs-target="#standings" type="button" role="tab" aria-controls="standings" aria-selected="false">
+                            <i class="fas fa-table"></i> Tabla de Posiciones
+                        </button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="livescores-tab" data-bs-toggle="tab" data-bs-target="#livescores" type="button" role="tab" aria-controls="livescores" aria-selected="false">Partidos en Vivo</button>
+                        <button class="nav-link" id="livescores-tab" data-bs-toggle="tab" data-bs-target="#livescores" type="button" role="tab" aria-controls="livescores" aria-selected="false">
+                            <i class="fas fa-futbol"></i> Partidos en Vivo
+                        </button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="fixtures-tab" data-bs-toggle="tab" data-bs-target="#fixtures" type="button" role="tab" aria-controls="fixtures" aria-selected="false">Próximos Partidos</button>
+                        <button class="nav-link" id="fixtures-tab" data-bs-toggle="tab" data-bs-target="#fixtures" type="button" role="tab" aria-controls="fixtures" aria-selected="false">
+                            <i class="fas fa-calendar-alt"></i> Calendario
+                        </button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab" aria-controls="history" aria-selected="false">Resultados</button>
+                        <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab" aria-controls="history" aria-selected="false">
+                            <i class="fas fa-history"></i> Historial
+                        </button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="metrics-tab" data-bs-toggle="tab" data-bs-target="#metrics" type="button" role="tab" aria-controls="metrics" aria-selected="false">Métricas</button>
+                        <button class="nav-link" id="metrics-tab" data-bs-toggle="tab" data-bs-target="#metrics" type="button" role="tab" aria-controls="metrics" aria-selected="false">
+                            <i class="fas fa-chart-bar"></i> Métricas
+                        </button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard" type="button" role="tab" aria-controls="dashboard" aria-selected="false">Dashboard</button>
+                        <button class="nav-link" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard" type="button" role="tab" aria-controls="dashboard" aria-selected="false">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard (48 horas)
+                        </button>
                     </li>
                 </ul>
             </div>
         </header>
 
         <div class="tab-content" id="myTabContent">
+            <!-- Telegram Bot Tab -->
+            <div class="tab-pane fade show active" id="telegram" role="tabpanel" aria-labelledby="telegram-tab">
+                <div class="card">
+                    <div class="card-header" style="background-color: #17a2b8; color: white;">
+                        <h3 class="card-title mb-0">Telegram Bot</h3>
+                    </div>
+                    <div class="card-body">
+                        <!-- Data will be loaded here via JavaScript -->
+                        <p class="text-center">Cargando Telegram Bot...</p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Standings Tab -->
-            <div class="tab-pane fade show active" id="standings" role="tabpanel" aria-labelledby="standings-tab">
+            <div class="tab-pane fade" id="standings" role="tabpanel" aria-labelledby="standings-tab">
                 <div class="card">
                     <div class="card-header" style="background-color: #17a2b8; color: white;">
                         <h3 class="card-title mb-0">Tabla de Posiciones</h3>
@@ -136,7 +168,7 @@
             <div class="tab-pane fade" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
                 <div class="card">
                     <div class="card-header" style="background-color: #17a2b8; color: white;">
-                        <h3 class="card-title mb-0">Dashboard</h3>
+                        <h3 class="card-title mb-0">Dashboard (48 horas)</h3>
                     </div>
                     <div class="card-body">
                         <div id="dashboard-container">

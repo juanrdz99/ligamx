@@ -51,11 +51,12 @@ function getTeamLogo(teamName) {
     return `<img src="${logoPath}" alt="${teamName}" class="team-logo" onerror="this.style.display='none'">`;  
 }
 
+// Ejecutar cuando el documento esté listo
 document.addEventListener('DOMContentLoaded', function() {
-    // Load standings data by default
-    loadStandings();
+    // Cargar el contenido inicial
+    loadInitialContent();
     
-    // Add event listeners for tab clicks
+    // Agregar event listeners para los clicks en las pestañas
     document.getElementById('standings-tab').addEventListener('click', function() {
         loadStandings();
     });
@@ -80,12 +81,12 @@ document.addEventListener('DOMContentLoaded', function() {
         loadDashboard();
     });
     
-    // Set auto-refresh for live scores tab
+    // Configurar auto-refresh para la pestaña de partidos en vivo
     setInterval(function() {
         if (document.getElementById('livescores-tab').classList.contains('active')) {
             loadLiveScores();
         }
-    }, 60000); // Refresh every minute
+    }, 60000); // Refrescar cada minuto
 });
 
 // Function to load standings data
@@ -676,7 +677,7 @@ function createGoalsChart(container, labels, goalsScored, goalsConceded) {
             plugins: {
                 title: {
                     display: true,
-                    text: 'Top 10 Equipos por Goles'
+                    text: 'Top 6 Equipos por Goles'
                 },
                 legend: {
                     position: 'top'
@@ -819,7 +820,7 @@ function displayDashboard(dashboardData) {
     callsChartDiv.innerHTML = `
         <div class="card">
             <div class="card-header bg-dark text-white">
-                <h5 class="mb-0">Llamadas API</h5>
+                <h5 class="mb-0">Llamadas API (48 horas)</h5>
             </div>
             <div class="card-body">
                 <canvas id="calls-chart" height="250"></canvas>
@@ -833,7 +834,7 @@ function displayDashboard(dashboardData) {
     successRateChartDiv.innerHTML = `
         <div class="card">
             <div class="card-header bg-dark text-white">
-                <h5 class="mb-0">Tasa de Éxito (%)</h5>
+                <h5 class="mb-0">Tasa de Éxito (%) (48 horas)</h5>
             </div>
             <div class="card-body">
                 <canvas id="success-rate-chart" height="250"></canvas>
@@ -847,7 +848,7 @@ function displayDashboard(dashboardData) {
     responseTimeChartDiv.innerHTML = `
         <div class="card">
             <div class="card-header bg-dark text-white">
-                <h5 class="mb-0">Tiempo de Respuesta (ms)</h5>
+                <h5 class="mb-0">Tiempo de Respuesta (ms) (48 horas)</h5>
             </div>
             <div class="card-body">
                 <canvas id="response-time-chart" height="250"></canvas>
@@ -861,7 +862,7 @@ function displayDashboard(dashboardData) {
     errorsChartDiv.innerHTML = `
         <div class="card">
             <div class="card-header bg-dark text-white">
-                <h5 class="mb-0">Número de Errores</h5>
+                <h5 class="mb-0">Número de Errores (48 horas)</h5>
             </div>
             <div class="card-body">
                 <canvas id="errors-chart" height="250"></canvas>
@@ -886,6 +887,14 @@ function createDashboardCharts(dashboardData) {
     const hours = dashboardData.hours;
     const apiTrend = dashboardData.api_trend;
     
+    // Configuración para mostrar solo algunas etiquetas en el eje X cuando hay muchas horas
+    const skipLabels = Math.ceil(hours.length / 12); // Mostrar aproximadamente 12 etiquetas
+    
+    // Función para determinar si mostrar una etiqueta basada en su índice
+    const skipLabelsCallback = function(value, index) {
+        return index % skipLabels === 0 ? hours[index] : '';
+    };
+    
     // Gráfico de Llamadas API
     const callsCtx = document.getElementById('calls-chart').getContext('2d');
     new Chart(callsCtx, {
@@ -899,37 +908,37 @@ function createDashboardCharts(dashboardData) {
                 borderColor: 'rgba(54, 162, 235, 1)',
                 borderWidth: 2,
                 tension: 0.4,
-                fill: true
+                pointRadius: 2,
+                pointHoverRadius: 5
             }]
         },
         options: {
             responsive: true,
-            plugins: {
-                legend: {
-                    position: 'top',
-                },
-                tooltip: {
-                    callbacks: {
-                        title: function(tooltipItems) {
-                            return 'Hora: ' + tooltipItems[0].label;
-                        }
-                    }
-                }
-            },
+            maintainAspectRatio: false,
             scales: {
-                y: {
-                    beginAtZero: false,
-                    grid: {
-                        color: 'rgba(200, 200, 200, 0.2)'
-                    }
-                },
                 x: {
-                    grid: {
-                        display: false
-                    },
                     title: {
                         display: true,
                         text: 'Horas'
+                    },
+                    ticks: {
+                        callback: skipLabelsCallback
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Número de llamadas'
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        title: function(context) {
+                            return 'Hora: ' + context[0].label;
+                        }
                     }
                 }
             }
@@ -943,31 +952,41 @@ function createDashboardCharts(dashboardData) {
         data: {
             labels: hours,
             datasets: [{
-                label: 'Tasa de Éxito',
+                label: 'Tasa de Éxito (%)',
                 data: apiTrend.success_rate,
-                backgroundColor: 'rgba(75, 192, 75, 0.7)',
-                borderColor: 'rgba(75, 192, 75, 1)',
-                borderWidth: 1
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 2
             }]
         },
         options: {
             responsive: true,
-            plugins: {
-                legend: {
-                    position: 'top',
-                }
-            },
+            maintainAspectRatio: false,
             scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Horas'
+                    },
+                    ticks: {
+                        callback: skipLabelsCallback
+                    }
+                },
                 y: {
                     beginAtZero: true,
                     max: 100,
-                    grid: {
-                        color: 'rgba(200, 200, 200, 0.2)'
+                    title: {
+                        display: true,
+                        text: 'Porcentaje'
                     }
-                },
-                x: {
-                    grid: {
-                        display: false
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        title: function(context) {
+                            return 'Hora: ' + context[0].label;
+                        }
                     }
                 }
             }
@@ -987,26 +1006,37 @@ function createDashboardCharts(dashboardData) {
                 borderColor: 'rgba(255, 206, 86, 1)',
                 borderWidth: 2,
                 tension: 0.4,
-                fill: true
+                pointRadius: 2,
+                pointHoverRadius: 5
             }]
         },
         options: {
             responsive: true,
-            plugins: {
-                legend: {
-                    position: 'top',
-                }
-            },
+            maintainAspectRatio: false,
             scales: {
-                y: {
-                    beginAtZero: false,
-                    grid: {
-                        color: 'rgba(200, 200, 200, 0.2)'
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Horas'
+                    },
+                    ticks: {
+                        callback: skipLabelsCallback
                     }
                 },
-                x: {
-                    grid: {
-                        display: false
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Milisegundos'
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        title: function(context) {
+                            return 'Hora: ' + context[0].label;
+                        }
                     }
                 }
             }
@@ -1020,33 +1050,120 @@ function createDashboardCharts(dashboardData) {
         data: {
             labels: hours,
             datasets: [{
-                label: 'Número de Errores',
+                label: 'Errores',
                 data: apiTrend.errors,
-                backgroundColor: 'rgba(255, 99, 132, 0.7)',
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
                 borderColor: 'rgba(255, 99, 132, 1)',
-                borderWidth: 1
+                borderWidth: 2
             }]
         },
         options: {
             responsive: true,
-            plugins: {
-                legend: {
-                    position: 'top',
-                }
-            },
+            maintainAspectRatio: false,
             scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: {
-                        color: 'rgba(200, 200, 200, 0.2)'
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Horas'
+                    },
+                    ticks: {
+                        callback: skipLabelsCallback
                     }
                 },
-                x: {
-                    grid: {
-                        display: false
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Número de errores'
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        title: function(context) {
+                            return 'Hora: ' + context[0].label;
+                        }
                     }
                 }
             }
         }
     });
+}
+
+// Función para cargar el contenido inicial
+function loadInitialContent() {
+    // Cargar el contenido del bot de Telegram
+    displayTelegramBot();
+    
+    // Cargar la tabla de posiciones
+    fetch('/api/standings')
+        .then(response => response.json())
+        .then(data => {
+            displayStandings(data);
+        })
+        .catch(error => {
+            console.error('Error fetching standings:', error);
+            document.getElementById('standings-container').innerHTML = '<p class="text-center text-danger">Error al cargar la tabla de posiciones. Por favor, intenta de nuevo más tarde.</p>';
+        });
+}
+
+// Función para mostrar la información del bot de Telegram
+function displayTelegramBot() {
+    const container = document.getElementById('telegram');
+    
+    // Crear el contenido del bot de Telegram
+    const telegramContent = document.createElement('div');
+    telegramContent.className = 'telegram-container';
+    telegramContent.innerHTML = `
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fab fa-telegram"></i> Bot de Notificaciones en Tiempo Real</h4>
+            </div>
+            <div class="card-body text-center">
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <div class="telegram-info mb-4">
+                            <img src="https://telegram.org/img/t_logo.png" alt="Telegram Logo" class="img-fluid mb-3" style="max-width: 100px;">
+                            <h3>¡Recibe notificaciones en tiempo real!</h3>
+                            <p class="lead mb-4">Mantente al día con todos los resultados, goles y eventos importantes de la Liga MX directamente en tu teléfono.</p>
+                            
+                            <div class="features-list mb-4">
+                                <div class="feature-item">
+                                    <i class="fas fa-bell text-primary"></i>
+                                    <span>Notificaciones instantáneas de goles</span>
+                                </div>
+                                <div class="feature-item">
+                                    <i class="fas fa-calendar-alt text-primary"></i>
+                                    <span>Recordatorios de partidos</span>
+                                </div>
+                                <div class="feature-item">
+                                    <i class="fas fa-chart-line text-primary"></i>
+                                    <span>Estadísticas en tiempo real</span>
+                                </div>
+                                <div class="feature-item">
+                                    <i class="fas fa-newspaper text-primary"></i>
+                                    <span>Noticias y actualizaciones</span>
+                                </div>
+                            </div>
+                            
+                            <a href="https://t.me/+kz4uIFKkIdwzMzRh" target="_blank" class="btn btn-primary btn-lg">
+                                <i class="fab fa-telegram"></i> Unirse al Bot de Telegram
+                            </a>
+                            
+                            <p class="mt-3 text-muted">O escanea el código QR con tu aplicación de Telegram</p>
+                            
+                            <div class="qr-code mt-2">
+                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://t.me/+kz4uIFKkIdwzMzRh" alt="QR Code" class="img-fluid" style="max-width: 200px;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Limpiar el contenedor y agregar el nuevo contenido
+    container.innerHTML = '';
+    container.appendChild(telegramContent);
 }

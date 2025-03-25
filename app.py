@@ -27,8 +27,8 @@ api_errors_count = 0
 api_response_times = []
 api_start_time = time.time()
 
-# Número de intervalos de tiempo para el historial (últimas 5 horas)
-HISTORY_INTERVALS = 5
+# Número de intervalos de tiempo para el historial (últimas 48 horas)
+HISTORY_INTERVALS = 48
 
 # Historial de llamadas para tendencias (últimas horas)
 api_history = {
@@ -60,7 +60,28 @@ def track_api_call(success, response_time):
     
     # Obtener la hora actual para actualizar el índice correcto
     current_hour = datetime.now().strftime('%H:%M')
-    hour_index = api_hours.index(current_hour) if current_hour in api_hours else HISTORY_INTERVALS - 1  # Última hora por defecto
+    
+    # Buscar la hora actual en el array de horas o usar la más cercana
+    if current_hour in api_hours:
+        hour_index = api_hours.index(current_hour)
+    else:
+        # Si la hora exacta no está, encontrar la hora más cercana
+        # Por defecto, usar la última hora
+        hour_index = HISTORY_INTERVALS - 1
+        
+        # Convertir current_hour a minutos desde medianoche para comparación
+        current_hour_parts = current_hour.split(':')
+        current_minutes = int(current_hour_parts[0]) * 60 + int(current_hour_parts[1])
+        
+        # Encontrar la hora más cercana
+        min_diff = float('inf')
+        for i, hour in enumerate(api_hours):
+            hour_parts = hour.split(':')
+            hour_minutes = int(hour_parts[0]) * 60 + int(hour_parts[1])
+            diff = abs(hour_minutes - current_minutes)
+            if diff < min_diff:
+                min_diff = diff
+                hour_index = i
     
     # Actualizar historial para la hora actual
     api_history['calls'][hour_index] += 1
