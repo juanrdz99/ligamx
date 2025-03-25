@@ -1,3 +1,363 @@
+// Función para crear los gráficos del dashboard
+function createDashboardCharts(dashboardData) {
+    console.log('Creando gráficos con datos:', dashboardData);
+    
+    // Obtener los datos de las últimas 12 horas para una visualización más relevante
+    const hours = dashboardData.hours.slice(-12);
+    const apiTrend = {
+        calls: dashboardData.api_trend.calls.slice(-12),
+        success_rate: dashboardData.api_trend.success_rate.slice(-12),
+        response_time: dashboardData.api_trend.response_time.slice(-12),
+        errors: dashboardData.api_trend.errors.slice(-12)
+    };
+    
+    console.log('Datos procesados para gráficas:', { hours, apiTrend });
+    
+    // Configuración para mostrar solo algunas etiquetas en el eje X cuando hay muchas horas
+    const skipLabels = Math.ceil(hours.length / 6); // Mostrar aproximadamente 6 etiquetas
+    
+    // Función para determinar si mostrar una etiqueta basada en su índice
+    const skipLabelsCallback = function(value, index) {
+        return index % skipLabels === 0 ? hours[index] : '';
+    };
+    
+    // Destruir gráficas existentes si existen para evitar problemas de duplicación
+    if (window.callsChart) {
+        window.callsChart.destroy();
+        window.callsChart = null;
+    }
+    if (window.successRateChart) {
+        window.successRateChart.destroy();
+        window.successRateChart = null;
+    }
+    if (window.responseTimeChart) {
+        window.responseTimeChart.destroy();
+        window.responseTimeChart = null;
+    }
+    if (window.errorsChart) {
+        window.errorsChart.destroy();
+        window.errorsChart = null;
+    }
+    
+    try {
+        // Gráfico de Llamadas API
+        const callsChartElement = document.getElementById('calls-chart');
+        if (!callsChartElement) {
+            console.error('No se encontró el elemento canvas para el gráfico de llamadas API');
+            return;
+        }
+        
+        const callsCtx = callsChartElement.getContext('2d');
+        window.callsChart = new Chart(callsCtx, {
+            type: 'line',
+            data: {
+                labels: hours,
+                datasets: [{
+                    label: 'Llamadas API',
+                    data: apiTrend.calls,
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    pointRadius: 3,
+                    pointHoverRadius: 6,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: {
+                    duration: 1000,
+                    easing: 'easeOutQuart'
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'últimas 12 horas',
+                            font: {
+                                weight: 'bold'
+                            }
+                        },
+                        ticks: {
+                            callback: skipLabelsCallback,
+                            font: {
+                                size: 10
+                            }
+                        },
+                        grid: {
+                            display: false
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Número de llamadas',
+                            font: {
+                                weight: 'bold'
+                            }
+                        },
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            title: function(context) {
+                                return 'Hora: ' + context[0].label;
+                            },
+                            label: function(context) {
+                                return 'Llamadas: ' + context.raw;
+                            }
+                        },
+                        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                        padding: 10,
+                        cornerRadius: 6
+                    }
+                }
+            }
+        });
+        console.log('Gráfico de llamadas API creado exitosamente');
+        
+        // Gráfico de Tasa de Éxito
+        const successRateCtx = document.getElementById('success-rate-chart').getContext('2d');
+        window.successRateChart = new Chart(successRateCtx, {
+            type: 'bar',
+            data: {
+                labels: hours,
+                datasets: [{
+                    label: 'Tasa de Éxito (%)',
+                    data: apiTrend.success_rate,
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: {
+                    duration: 1000,
+                    easing: 'easeOutQuart'
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'últimas 12 horas',
+                            font: {
+                                weight: 'bold'
+                            }
+                        },
+                        ticks: {
+                            callback: skipLabelsCallback,
+                            font: {
+                                size: 10
+                            }
+                        },
+                        grid: {
+                            display: false
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        title: {
+                            display: true,
+                            text: 'Porcentaje',
+                            font: {
+                                weight: 'bold'
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            title: function(context) {
+                                return 'Hora: ' + context[0].label;
+                            },
+                            label: function(context) {
+                                return 'Tasa de éxito: ' + context.raw.toFixed(1) + '%';
+                            }
+                        },
+                        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                        padding: 10,
+                        cornerRadius: 6
+                    }
+                }
+            }
+        });
+        
+        // Gráfico de Tiempo de Respuesta
+        const responseTimeCtx = document.getElementById('response-time-chart').getContext('2d');
+        window.responseTimeChart = new Chart(responseTimeCtx, {
+            type: 'line',
+            data: {
+                labels: hours,
+                datasets: [{
+                    label: 'Tiempo de Respuesta (ms)',
+                    data: apiTrend.response_time.map(time => time * 1000), // Convertir a milisegundos
+                    backgroundColor: 'rgba(255, 206, 86, 0.2)',
+                    borderColor: 'rgba(255, 206, 86, 1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    pointRadius: 3,
+                    pointHoverRadius: 6,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: {
+                    duration: 1000,
+                    easing: 'easeOutQuart'
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'últimas 12 horas',
+                            font: {
+                                weight: 'bold'
+                            }
+                        },
+                        ticks: {
+                            callback: skipLabelsCallback,
+                            font: {
+                                size: 10
+                            }
+                        },
+                        grid: {
+                            display: false
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Milisegundos',
+                            font: {
+                                weight: 'bold'
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            title: function(context) {
+                                return 'Hora: ' + context[0].label;
+                            },
+                            label: function(context) {
+                                return 'Tiempo: ' + context.raw.toFixed(1) + ' ms';
+                            }
+                        },
+                        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                        padding: 10,
+                        cornerRadius: 6
+                    }
+                }
+            }
+        });
+        
+        // Gráfico de Errores
+        const errorsCtx = document.getElementById('errors-chart').getContext('2d');
+        window.errorsChart = new Chart(errorsCtx, {
+            type: 'bar',
+            data: {
+                labels: hours,
+                datasets: [{
+                    label: 'Errores',
+                    data: apiTrend.errors,
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: {
+                    duration: 1000,
+                    easing: 'easeOutQuart'
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'últimas 12 horas',
+                            font: {
+                                weight: 'bold'
+                            }
+                        },
+                        ticks: {
+                            callback: skipLabelsCallback,
+                            font: {
+                                size: 10
+                            }
+                        },
+                        grid: {
+                            display: false
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Número de errores',
+                            font: {
+                                weight: 'bold'
+                            }
+                        },
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            title: function(context) {
+                                return 'Hora: ' + context[0].label;
+                            },
+                            label: function(context) {
+                                return 'Errores: ' + context.raw;
+                            }
+                        },
+                        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                        padding: 10,
+                        cornerRadius: 6
+                    }
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error creando gráficos:', error);
+    }
+} // Agregar la llave de cierre faltante aquí
+
 // Helper function to format date with 6 hours subtracted
 function formatDate(dateString) {
     if (!dateString || dateString === 'Sin fecha') return 'Fecha no disponible';
