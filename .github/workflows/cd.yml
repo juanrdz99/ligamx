@@ -5,8 +5,11 @@ on:
     workflows: ["LIGAMX Stats CI"]
     types:
       - completed
-    branches:
-      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
 
 jobs:
   build:
