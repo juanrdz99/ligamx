@@ -26,49 +26,30 @@ jobs:
         pip install python-dotenv flask requests
         
     - name: Create .env file
-      env:
-        LIVESCORE_API_KEY: ${{ secrets.LIVESCORE_API_KEY }}
-        LIVESCORE_API_SECRET: ${{ secrets.LIVESCORE_API_SECRET }}
-        SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
-        SMTP_PORT: ${{ secrets.SMTP_PORT }}
-        SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
-        SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
-        SMTP_FROM: ${{ secrets.SMTP_FROM }}
-        SMTP_TO: ${{ secrets.SMTP_TO }}
       run: |
-        echo "LIVESCORE_API_KEY=$LIVESCORE_API_KEY" > .env
-        echo "LIVESCORE_API_SECRET=$LIVESCORE_API_SECRET" >> .env
+        echo "LIVESCORE_API_KEY=${{ secrets.LIVESCORE_API_KEY }}" > .env
+        echo "LIVESCORE_API_SECRET=${{ secrets.LIVESCORE_API_SECRET }}" >> .env
         echo "FLASK_ENV=production" >> .env
         echo "FLASK_DEBUG=False" >> .env
-        echo "SMTP_SERVER=$SMTP_SERVER" >> .env
-        echo "SMTP_PORT=$SMTP_PORT" >> .env
-        echo "SMTP_USERNAME=$SMTP_USERNAME" >> .env
-        echo "SMTP_PASSWORD=$SMTP_PASSWORD" >> .env
-        echo "SMTP_FROM=$SMTP_FROM" >> .env
-        echo "SMTP_TO=$SMTP_TO" >> .env
+        echo "SMTP_SERVER=${{ secrets.SMTP_SERVER }}" >> .env
+        echo "SMTP_PORT=${{ secrets.SMTP_PORT }}" >> .env
+        echo "SMTP_USERNAME=${{ secrets.SMTP_USERNAME }}" >> .env
+        echo "SMTP_PASSWORD=${{ secrets.SMTP_PASSWORD }}" >> .env
+        echo "SMTP_FROM=${{ secrets.SMTP_FROM }}" >> .env
+        echo "SMTP_TO=${{ secrets.SMTP_TO }}" >> .env
     
     - name: Deploy to production
-      env:
-        SSH_HOST: ${{ secrets.SSH_HOST }}
-        SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
-        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-        SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
-        SMTP_PORT: ${{ secrets.SMTP_PORT }}
-        SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
-        SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
-        SMTP_FROM: ${{ secrets.SMTP_FROM }}
-        SMTP_TO: ${{ secrets.SMTP_TO }}
       run: |
         mkdir -p ~/.ssh
-        echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
-        ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
+        ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
         
-        # Deploy the application
-        rsync -avz --exclude '.git' --exclude 'tests' --exclude '.github' ./ $SSH_USERNAME@$SSH_HOST:/var/www/ligamxweb/
+        # Deploy application
+        rsync -avz --exclude '.git' --exclude '.github' --exclude '__pycache__' --exclude 'venv' --exclude '.env' . ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:/var/www/ligamxweb
         
-        # Restart the service
-        ssh $SSH_USERNAME@$SSH_HOST 'sudo systemctl restart ligamxweb.service'
+        # Restart service
+        ssh ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} 'sudo systemctl restart ligamxweb.service'
         
         # Send notification
-        python -c "import smtplib; from email.mime.text import MIMEText; s = smtplib.SMTP('$SMTP_SERVER', $SMTP_PORT); s.starttls(); s.login('$SMTP_USERNAME', '$SMTP_PASSWORD'); msg = MIMEText('LIGAMX Stats application has been deployed successfully.'); msg['Subject'] = 'Deployment Notification'; msg['From'] = '$SMTP_FROM'; msg['To'] = '$SMTP_TO'; s.send_message(msg); s.quit()"
+        python -c "import smtplib; from email.mime.text import MIMEText; s = smtplib.SMTP('${{ secrets.SMTP_SERVER }}', ${{ secrets.SMTP_PORT }}); s.starttls(); s.login('${{ secrets.SMTP_USERNAME }}', '${{ secrets.SMTP_PASSWORD }}'); msg = MIMEText('LIGAMX Stats application has been deployed successfully.'); msg['Subject'] = 'Deployment Notification'; msg['From'] = '${{ secrets.SMTP_FROM }}'; msg['To'] = '${{ secrets.SMTP_TO }}'; s.send_message(msg); s.quit()"
