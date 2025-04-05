@@ -6,19 +6,35 @@ from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from api_stats_manager import ApiStatsManager
 from functools import wraps
+import sys
 
 # Cargar variables de entorno desde el archivo .env
 load_dotenv()
 
+# Verificar que todas las variables de entorno requeridas estén configuradas
+required_env_vars = [
+    'SECRET_KEY',
+    'RECAPTCHA_SITE_KEY',
+    'RECAPTCHA_SECRET_KEY',
+    'LIVESCORE_API_KEY',
+    'LIVESCORE_API_SECRET'
+]
+
+missing_vars = [var for var in required_env_vars if not os.getenv(var)]
+if missing_vars:
+    print(f"Error: Las siguientes variables de entorno son requeridas pero no están configuradas: {', '.join(missing_vars)}")
+    print("Por favor, configure estas variables en su archivo .env")
+    sys.exit(1)
+
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'clave_secreta_predeterminada')
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
 # Configuración de sesión
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=1)  # La sesión dura 1 día
 
 # reCAPTCHA credentials
-RECAPTCHA_SITE_KEY = os.getenv('RECAPTCHA_SITE_KEY', '6LdMVwsrAAAAAPPimBfGsUkCeK5-E0nRqoZIk9gZ')  # Clave de sitio proporcionada
-RECAPTCHA_SECRET_KEY = os.getenv('RECAPTCHA_SECRET_KEY', '6LdMVwsrAAAAAJcrWJrSMmLcbok-8FNJsyZHvUQE')  # Clave secreta proporcionada
+RECAPTCHA_SITE_KEY = os.getenv('RECAPTCHA_SITE_KEY')
+RECAPTCHA_SECRET_KEY = os.getenv('RECAPTCHA_SECRET_KEY')
 
 # LiveScore API credentials
 LIVESCORE_API_KEY = os.getenv('LIVESCORE_API_KEY')
