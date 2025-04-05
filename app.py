@@ -1,15 +1,24 @@
 import os
 import requests
 import time
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, request, redirect, url_for, session
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from api_stats_manager import ApiStatsManager
+from functools import wraps
 
 # Cargar variables de entorno desde el archivo .env
 load_dotenv()
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'clave_secreta_predeterminada')
+
+# Configuración de sesión
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=1)  # La sesión dura 1 día
+
+# reCAPTCHA credentials
+RECAPTCHA_SITE_KEY = os.getenv('RECAPTCHA_SITE_KEY', '6LdMVwsrAAAAAPPimBfGsUkCeK5-E0nRqoZIk9gZ')  # Clave de sitio proporcionada
+RECAPTCHA_SECRET_KEY = os.getenv('RECAPTCHA_SECRET_KEY', '6LdMVwsrAAAAAJcrWJrSMmLcbok-8FNJsyZHvUQE')  # Clave secreta proporcionada
 
 # LiveScore API credentials
 LIVESCORE_API_KEY = os.getenv('LIVESCORE_API_KEY')
@@ -28,14 +37,55 @@ api_stats = ApiStatsManager(history_intervals=48)
 def track_api_call(success, response_time):
     api_stats.track_api_call(success, response_time)
 
+# Función para verificar reCAPTCHA
+def verify_recaptcha(recaptcha_response):
+    payload = {
+        'secret': RECAPTCHA_SECRET_KEY,
+        'response': recaptcha_response
+    }
+    response = requests.post('https://www.google.com/recaptcha/api/siteverify', data=payload, timeout=10)
+    result = response.json()
+    return result.get('success', False)
+
+# Decorador para verificar si el usuario está verificado
+def human_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if session.get('human_verified'):
+            return f(*args, **kwargs)
+        return redirect(url_for('verify'))
+    return decorated_function
+
+# Ruta de verificación
+@app.route('/verify', methods=['GET', 'POST'])
+def verify():
+    error = None
+    
+    if request.method == 'POST':
+        recaptcha_response = request.form.get('g-recaptcha-response')
+        if recaptcha_response:
+            is_human = verify_recaptcha(recaptcha_response)
+            if is_human:
+                session['human_verified'] = True
+                session.permanent = True
+                return redirect(url_for('index'))
+            else:
+                error = 'La verificación de reCAPTCHA ha fallado. Por favor, inténtalo de nuevo.'
+        else:
+            error = 'Por favor, completa el reCAPTCHA.'
+    
+    return render_template('verify.html', recaptcha_site_key=RECAPTCHA_SITE_KEY, error=error)
+
 @app.route('/')
+@human_required
 def index():
     return render_template('index.html')
 
 @app.route('/api/standings')
+@human_required
 def get_standings():
     try:
-        response = requests.get(STANDINGS_URL)
+        response = requests.get(STANDINGS_URL, timeout=10)  # Añadido timeout
         data = response.json()
         
         # If we need additional filtering for stage_id
@@ -51,9 +101,10 @@ def get_standings():
 
 #Actualizar cada lunes
 @app.route('/api/fixtures')
+@human_required
 def get_fixtures():
     try:
-        response = requests.get(FIXTURES_URL)
+        response = requests.get(FIXTURES_URL, timeout=10)  # Añadido timeout
         data = response.json()
         
         # Verifica que la respuesta tenga el campo "fixtures"
@@ -71,9 +122,10 @@ def get_fixtures():
 
 
 @app.route('/api/history')
+@human_required
 def get_history():
     try:
-        response = requests.get(HISTORY_URL)
+        response = requests.get(HISTORY_URL, timeout=10)  # Añadido timeout
         data = response.json()
         track_api_call(True, response.elapsed.total_seconds())
         return jsonify(data)
@@ -82,11 +134,12 @@ def get_history():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/results')
+@human_required
 def get_results():
     try:
         # Usamos la misma URL que history pero con página diferente para obtener resultados más recientes
         results_url = f'https://livescore-api.com/api-client/scores/history.json?competition_id=45&page=1&key={LIVESCORE_API_KEY}&secret={LIVESCORE_API_SECRET}'
-        response = requests.get(results_url)
+        response = requests.get(results_url, timeout=10)  # Añadido timeout
         data = response.json()
         track_api_call(True, response.elapsed.total_seconds())
         return jsonify(data)
@@ -95,14 +148,15 @@ def get_results():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/metrics')
+@human_required
 def get_metrics():
     try:
         # Obtener datos reales de máximos goleadores
-        topscorers_response = requests.get(TOPSCORERS_URL)
+        topscorers_response = requests.get(TOPSCORERS_URL, timeout=10)  # Añadido timeout
         topscorers_data = topscorers_response.json()
         
         # Obtener datos de la tabla de posiciones para extraer información de goles
-        standings_response = requests.get(STANDINGS_URL)
+        standings_response = requests.get(STANDINGS_URL, timeout=10)  # Añadido timeout
         standings_data = standings_response.json()
         
         # Procesar datos de goles por equipo desde la tabla de posiciones
@@ -133,6 +187,7 @@ def get_metrics():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/dashboard')
+@human_required
 def get_dashboard():
     try:
         # Obtener datos reales de partidos jugados
@@ -140,7 +195,7 @@ def get_dashboard():
         
         # Obtener datos de resultados para contar partidos jugados
         results_url = f'https://livescore-api.com/api-client/scores/history.json?competition_id=45&key={LIVESCORE_API_KEY}&secret={LIVESCORE_API_SECRET}'
-        results_response = requests.get(results_url)
+        results_response = requests.get(results_url, timeout=10)  # Añadido timeout
         results_data = results_response.json()
         
         # Contar partidos de la primera página
@@ -154,7 +209,7 @@ def get_dashboard():
             if total_pages > 1:
                 # Obtener datos de la última página
                 last_page_url = f'https://livescore-api.com/api-client/scores/history.json?competition_id=45&page={total_pages}&key={LIVESCORE_API_KEY}&secret={LIVESCORE_API_SECRET}'
-                last_page_response = requests.get(last_page_url)
+                last_page_response = requests.get(last_page_url, timeout=10)  # Añadido timeout
                 last_page_data = last_page_response.json()
                 
                 if last_page_data.get('success') and last_page_data.get('data') and last_page_data.get('data').get('match'):
@@ -183,4 +238,4 @@ def get_dashboard():
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=True)
+    app.run(host='127.0.0.1', port=port, debug=True)  # Cambiado a 127.0.0.1 por seguridad

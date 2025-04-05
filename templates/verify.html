@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LIGAMX Stats - Verificación</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <!-- reCAPTCHA -->
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+</head>
+<body>
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="card shadow">
+                    <div class="card-header text-center">
+                        <h1 class="liga-mx-title mb-0">
+                            <span class="text-green">LIGA</span><span class="text-white">MX</span> <span class="text-red">Stats</span>
+                        </h1>
+                    </div>
+                    <div class="card-body">
+                        <h2 class="text-center mb-4">Verificación de Seguridad</h2>
+                        
+                        <p class="text-center mb-4">Para proteger nuestro sitio contra bots y garantizar una mejor experiencia, necesitamos verificar que eres humano.</p>
+                        
+                        {% if error %}
+                        <div class="alert alert-danger" role="alert">
+                            {{ error }}
+                        </div>
+                        {% endif %}
+                        
+                        <form method="POST" action="{{ url_for('verify') }}" class="verify-form">
+                            <div class="d-flex justify-content-center mb-4">
+                                <div class="g-recaptcha" data-sitekey="{{ recaptcha_site_key }}"></div>
+                            </div>
+                            
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-check-circle me-2"></i>Verificar y Continuar
+                                </button>
+                            </div>
+                        </form>
+                        
+                        <div class="text-center mt-4">
+                            <p class="text-muted small">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Esta verificación solo es necesaria una vez por sesión.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
