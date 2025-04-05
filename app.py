@@ -17,7 +17,6 @@ LIVESCORE_API_SECRET = os.getenv('LIVESCORE_API_SECRET')
 
 # API endpoints
 STANDINGS_URL = f'https://livescore-api.com/api-client/leagues/table.json?competition_id=45&group_id=3420&key={LIVESCORE_API_KEY}&secret={LIVESCORE_API_SECRET}'
-LIVESCORES_URL = f'https://livescore-api.com/api-client/matches/live.json?competition_id=45&key={LIVESCORE_API_KEY}&secret={LIVESCORE_API_SECRET}'
 FIXTURES_URL = f'https://livescore-api.com/api-client/fixtures/matches.json?competition_id=45&key={LIVESCORE_API_KEY}&secret={LIVESCORE_API_SECRET}'
 HISTORY_URL = f'https://livescore-api.com/api-client/scores/history.json?competition_id=45&page=93&key={LIVESCORE_API_KEY}&secret={LIVESCORE_API_SECRET}'
 TOPSCORERS_URL = f'https://livescore-api.com/api-client/competitions/topscorers.json?competition_id=45&key={LIVESCORE_API_KEY}&secret={LIVESCORE_API_SECRET}'
@@ -50,18 +49,6 @@ def get_standings():
         track_api_call(False, 0)
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/livescores')
-def get_livescores():
-    try:
-        response = requests.get(LIVESCORES_URL)
-        data = response.json()
-        track_api_call(True, response.elapsed.total_seconds())
-        return jsonify(data)
-    except Exception as e:
-        track_api_call(False, 0)
-        return jsonify({'error': str(e)}), 500
-
-
 #Actualizar cada lunes
 @app.route('/api/fixtures')
 def get_fixtures():
@@ -73,7 +60,7 @@ def get_fixtures():
         if data.get("success") and "data" in data and "fixtures" in data["data"]:
             fixtures = data["data"]["fixtures"]
             # Filtra solo los partidos cuyo round sea "13"
-            filtered_fixtures = [fixture for fixture in fixtures if fixture.get("round") == "13"]
+            filtered_fixtures = [fixture for fixture in fixtures if fixture.get("round") == "14"]
             data["data"]["fixtures"] = filtered_fixtures
         
         track_api_call(True, response.elapsed.total_seconds())

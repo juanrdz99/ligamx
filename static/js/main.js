@@ -421,10 +421,6 @@ document.addEventListener('DOMContentLoaded', function() {
         loadStandings();
     });
     
-    document.getElementById('livescores-tab').addEventListener('click', function() {
-        loadLiveScores();
-    });
-    
     document.getElementById('fixtures-tab').addEventListener('click', function() {
         loadFixtures();
     });
@@ -440,28 +436,27 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('dashboard-tab').addEventListener('click', function() {
         loadDashboard();
     });
-    
-    // Configurar auto-refresh para la pestaña de partidos en vivo
-    setInterval(function() {
-        if (document.getElementById('livescores-tab').classList.contains('active')) {
-            loadLiveScores();
-        }
-    }, 60000); // Refrescar cada minuto
 });
 
 // Function to load standings data
 function loadStandings() {
     fetch('/api/standings')
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}, Text: ${response.statusText}`);
+            }
+            return response.json();
+        })
         .then(data => {
-            if (data.success && data.data.table) {
+            if (data.success && data.data && data.data.table) {
                 displayStandings(data.data.table);
             } else {
-                showError('standings-body', 'No se pudieron cargar los datos de la tabla.');
+                console.error('API error:', data);
+                showError('standings-body', `No se pudieron cargar los datos de la tabla. ${data.error || ''}`);
             }
         })
         .catch(error => {
-            console.error('Error fetching standings:', error);
+            console.error('Error fetching standings:', error.toString());
             showError('standings-body', 'Error al cargar los datos. Por favor, intente más tarde.');
         });
 }
@@ -548,26 +543,6 @@ function displayStandings(tableData) {
         
         tableBody.appendChild(row);
     });
-}
-
-// Function to load live scores
-function loadLiveScores() {
-    const container = document.getElementById('livescores-container');
-    container.innerHTML = '<div class="text-center"><div class="loading-spinner"></div><p>Cargando partidos en vivo...</p></div>';
-    
-    fetch('/api/livescores')
-        .then(response => response.json())
-        .then(data => {
-            if (data.success && data.data.match) {
-                displayMatches(data.data.match, 'livescores-container', 'en vivo');
-            } else {
-                container.innerHTML = '<div class="alert alert-info">No hay partidos en vivo en este momento.</div>';
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching live scores:', error);
-            container.innerHTML = '<div class="alert alert-danger">Error al cargar los datos. Por favor, intente más tarde.</div>';
-        });
 }
 
 // Function to load fixtures
@@ -1453,19 +1428,14 @@ function createDashboardCharts(dashboardData) {
 
 // Función para cargar el contenido inicial
 function loadInitialContent() {
-    // Cargar el contenido del bot de Telegram
+    // Cargar datos para cada pestaña
+    loadStandings();
+    loadFixtures();
+    loadHistory();
+    loadResults();
+    loadMetrics();
+    loadDashboard();
     displayTelegramBot();
-    
-    // Cargar la tabla de posiciones
-    fetch('/api/standings')
-        .then(response => response.json())
-        .then(data => {
-            displayStandings(data);
-        })
-        .catch(error => {
-            console.error('Error fetching standings:', error);
-            document.getElementById('standings-container').innerHTML = '<p class="text-center text-danger">Error al cargar la tabla de posiciones. Por favor, intenta de nuevo más tarde.</p>';
-        });
 }
 
 // Función para mostrar la información del bot de Telegram

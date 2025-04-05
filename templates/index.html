@@ -9,19 +9,19 @@
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/favicon.svg') }}">
     <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/logo.png') }}">
     <!-- Meta tags -->
-    <meta name="description" content="Estadísticas en tiempo real de la Liga MX. Tabla de posiciones, partidos en vivo, calendario, historial y métricas avanzadas del fútbol mexicano. Recibe notificaciones por Telegram.">
-    <meta name="keywords" content="Liga MX, fútbol mexicano, estadísticas, tabla de posiciones, partidos en vivo, métricas">
+    <meta name="description" content="Estadísticas en tiempo real de la Liga MX. Tabla de posiciones, calendario, historial y métricas avanzadas del fútbol mexicano. Recibe notificaciones por Telegram.">
+    <meta name="keywords" content="Liga MX, fútbol mexicano, estadísticas, tabla de posiciones, métricas">
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://ligamx-eta.vercel.app/">
     <meta property="og:title" content="Liga MX Stats">
-    <meta property="og:description" content="Estadísticas en tiempo real de la Liga MX. Tabla de posiciones, partidos en vivo, calendario, historial y métricas avanzadas del fútbol mexicano.">
+    <meta property="og:description" content="Estadísticas en tiempo real de la Liga MX. Tabla de posiciones, calendario, historial y métricas avanzadas del fútbol mexicano.">
     <meta property="og:image" content="{{ url_for('static', filename='img/logo.png') }}">
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="https://ligamx-eta.vercel.app/">
     <meta property="twitter:title" content="Liga MX Stats">
-    <meta property="twitter:description" content="Estadísticas en tiempo real de la Liga MX. Tabla de posiciones, partidos en vivo, calendario, historial y métricas avanzadas del fútbol mexicano.">
+    <meta property="twitter:description" content="Estadísticas en tiempo real de la Liga MX. Tabla de posiciones, calendario, historial y métricas avanzadas del fútbol mexicano.">
     <meta property="twitter:image" content="{{ url_for('static', filename='img/logo.png') }}">
     <!-- Stylesheets -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
@@ -49,11 +49,6 @@
                     <li class="nav-item" role="presentation">
                         <button class="nav-link" id="standings-tab" data-bs-toggle="tab" data-bs-target="#standings" type="button" role="tab" aria-controls="standings" aria-selected="false">
                             <i class="fas fa-table"></i> Tabla de Posiciones
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="livescores-tab" data-bs-toggle="tab" data-bs-target="#livescores" type="button" role="tab" aria-controls="livescores" aria-selected="false">
-                            <i class="fas fa-futbol"></i> Partidos en Vivo
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
@@ -129,26 +124,11 @@
                 </div>
             </div>
 
-            <!-- Live Scores Tab -->
-            <div class="tab-pane fade" id="livescores" role="tabpanel" aria-labelledby="livescores-tab">
-                <div class="card">
-                    <div class="card-header" style="background-color: #17a2b8; color: white;">
-                        <h3 class="card-title mb-0">Partidos en Vivo</h3>
-                    </div>
-                    <div class="card-body">
-                        <div id="livescores-container">
-                            <!-- Data will be loaded here via JavaScript -->
-                            <p class="text-center">Cargando partidos en vivo...</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <!-- Fixtures Tab -->
             <div class="tab-pane fade" id="fixtures" role="tabpanel" aria-labelledby="fixtures-tab">
                 <div class="card">
                     <div class="card-header" style="background-color: #17a2b8; color: white;">
-                        <h3 class="card-title mb-0">Próximos Partidos - Jornada 13</h3>
+                        <h3 class="card-title mb-0">Próximos Partidos - Jornada 14</h3>
                     </div>
                     <div class="card-body">
                         <div id="fixtures-container">
@@ -168,7 +148,7 @@
                     <div class="card-body">
                         <div id="history-container">
                             <!-- Data will be loaded here via JavaScript -->
-                            <p class="text-center">Cargando resultados...</p>
+                            <p class="text-center">Cargando historial de partidos...</p>
                         </div>
                     </div>
                 </div>
@@ -193,7 +173,7 @@
             <div class="tab-pane fade" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
                 <div class="card">
                     <div class="card-header" style="background-color: #17a2b8; color: white;">
-                        <h3 class="card-title mb-0">Dashboard (48 horas)</h3>
+                        <h3 class="card-title mb-0">Dashboard</h3>
                     </div>
                     <div class="card-body">
                         <div id="dashboard-container">
@@ -210,8 +190,9 @@
         <p> 2025 Liga MX Web | Datos proporcionados por LiveScore API</p>
     </footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
-    <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>
